@@ -32,6 +32,9 @@ def load_environment_variables():
     """
     環境変数を読み込む（ローカル環境とStreamlit Cloudで分岐）
     """
+    if "session_state" not in st.session_state:
+        st.session_state.api_key = None  # デフォルト値を設定
+
     if "API_KEY" in os.environ:
         # Streamlit CloudではSecretsから環境変数を取得
         st.session_state.api_key = os.environ["API_KEY"]
