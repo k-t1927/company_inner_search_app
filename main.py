@@ -6,7 +6,7 @@
 # 1. ライブラリの読み込み
 ############################################################
 # 「.env」ファイルから環境変数を読み込むための関数
-from dotenv import load_dotenv
+# from dotenv import load_dotenv  左はinitialize.pyで読み込みこむので移動
 # ログ出力を行うためのモジュール
 import logging
 # streamlitアプリの表示を担当するモジュール

@@ -24,8 +24,24 @@ import constants as ct
 ############################################################
 # 設定関連
 ############################################################
-# 「.env」ファイルで定義した環境変数の読み込み
-load_dotenv()
+# ローカル環境とStreamlit Cloudで分岐できるように、環境変数を読み込む
+# - Streamlit Cloudでは、環境変数は「Secrets」から取得
+# - ローカル環境では、.envファイルから取得
+# - どちらも取得できない場合はエラーを表示
+def load_environment_variables():
+    """
+    環境変数を読み込む（ローカル環境とStreamlit Cloudで分岐）
+    """
+    if "API_KEY" in os.environ:
+        # Streamlit CloudではSecretsから環境変数を取得
+        st.session_state.api_key = os.environ["API_KEY"]
+    else:
+        # ローカル環境では.envファイルから環境変数を読み込む
+        load_dotenv()
+        api_key = os.getenv("API_KEY")
+        if not api_key:
+            raise ValueError("APIキーが設定されていません。環境変数または.envファイルを確認してください。")
+        st.session_state.api_key = api_key
 
 
 ############################################################
