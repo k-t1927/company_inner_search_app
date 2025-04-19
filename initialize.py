@@ -52,6 +52,8 @@ def initialize():
     """
     画面読み込み時に実行する初期化処理
     """
+    # 環境変数の読み込み
+    load_environment_variables()
     # 初期化データの用意
     initialize_session_state()
     # ログ出力用にセッションIDを生成
