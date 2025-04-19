@@ -32,19 +32,20 @@ def load_environment_variables():
     """
     環境変数を読み込む（ローカル環境とStreamlit Cloudで分岐）
     """
-    if "session_state" not in st.session_state:
-        st.session_state.api_key = None  # デフォルト値を設定
-
-    if "API_KEY" in os.environ:
-        # Streamlit CloudではSecretsから環境変数を取得
-        st.session_state.api_key = os.environ["API_KEY"]
-    else:
-        # ローカル環境では.envファイルから環境変数を読み込む
-        load_dotenv()
-        api_key = os.getenv("API_KEY")
-        if not api_key:
-            raise ValueError("APIキーが設定されていません。環境変数または.envファイルを確認してください。")
-        st.session_state.api_key = api_key
+    try:
+        if "API_KEY" in os.environ:
+            st.session_state.api_key = os.environ["API_KEY"]
+            print("API_KEY loaded from environment variables.")  # デバッグログ
+        else:
+            load_dotenv()
+            api_key = os.getenv("API_KEY")
+            if not api_key:
+                raise ValueError("APIキーが設定されていません。環境変数または.envファイルを確認してください。")
+            st.session_state.api_key = api_key
+            print("API_KEY loaded from .env file.")  # デバッグログ
+    except Exception as e:
+        print(f"Error loading environment variables: {e}")  # デバッグログ
+        raise
 
 
 ############################################################
