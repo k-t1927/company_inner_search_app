@@ -6,7 +6,7 @@
 # 1. ライブラリの読み込み
 ############################################################
 # 「.env」ファイルから環境変数を読み込むための関数
-# from dotenv import load_dotenv  左はinitialize.pyで読み込みこむので移動
+from dotenv import load_dotenv
 # ログ出力を行うためのモジュール
 import logging
 # streamlitアプリの表示を担当するモジュール
@@ -59,11 +59,23 @@ if not "initialized" in st.session_state:
 # タイトル表示
 cn.display_app_title()
 
-# モード表示
-cn.display_select_mode()
 
-# AIメッセージの初期表示
-cn.display_initial_ai_message()
+############################################################
+# 5.  サイドバーの表示
+############################################################
+
+# サイドバー内にモード表示とAIメッセージの初期表示を収める
+with st.sidebar:
+
+    st.markdown("# 利用目的")
+    # モード表示
+    cn.display_select_mode()
+
+    # 灰色の線を追加
+    st.markdown("---")  # 水平線を追加（デフォルトで灰色）
+
+    # AIメッセージの初期表示
+    cn.display_initial_ai_message()
 
 
 ############################################################

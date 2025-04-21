@@ -69,9 +69,15 @@ def get_llm_response(chat_message):
     Returns:
         LLMからの回答
     """
-    # LLMのオブジェクトを用意
+    # LLMのオブジェクトを用意 
     llm = ChatOpenAI(model_name=ct.MODEL, temperature=ct.TEMPERATURE)
-
+    # try:
+    #     llm = ChatOpenAI(model_name=ct.MODEL, temperature=ct.TEMPERATURE)
+    #     response = llm(chat_message)
+    #     return response
+    # except Exception as e:
+    #     print("Error in get_llm_response:", e)
+    #     raise    
     # 会話履歴なしでもLLMに理解してもらえる、独立した入力テキストを取得するためのプロンプトテンプレートを作成
     question_generator_template = ct.SYSTEM_PROMPT_CREATE_INDEPENDENT_TEXT
     question_generator_prompt = ChatPromptTemplate.from_messages(
@@ -100,7 +106,7 @@ def get_llm_response(chat_message):
 
     # 会話履歴なしでもLLMに理解してもらえる、独立した入力テキストを取得するためのRetrieverを作成
     history_aware_retriever = create_history_aware_retriever(
-        llm, st.session_state.retriever, question_generator_prompt
+        llm, st.session_state.retriever, question_generator_prompt, 
     )
 
     # LLMから回答を取得する用のChainを作成

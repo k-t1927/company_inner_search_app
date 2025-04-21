@@ -13,40 +13,19 @@ import sys
 import unicodedata
 from dotenv import load_dotenv
 import streamlit as st
-from docx import Document
+# from docx import Document  # 現在使用していないためコメントアウト
 from langchain_community.document_loaders import WebBaseLoader
 from langchain.text_splitter import CharacterTextSplitter
 from langchain_openai import OpenAIEmbeddings
 from langchain_community.vectorstores import Chroma
 import constants as ct
-
+from langchain.schema import Document
 
 ############################################################
 # 設定関連
 ############################################################
-# ローカル環境とStreamlit Cloudで分岐できるように、環境変数を読み込む
-# - Streamlit Cloudでは、環境変数は「Secrets」から取得
-# - ローカル環境では、.envファイルから取得
-# - どちらも取得できない場合はエラーを表示
-def load_environment_variables():
-    """
-    環境変数を読み込む（ローカル環境とStreamlit Cloudで分岐）
-    """
-    try:
-        if "API_KEY" in os.environ:
-            st.session_state.api_key = os.environ["API_KEY"]
-            print("API_KEY loaded from environment variables.")  # デバッグログ
-        else:
-            load_dotenv()
-            api_key = os.getenv("API_KEY")
-            if not api_key:
-                raise ValueError("APIキーが設定されていません。環境変数または.envファイルを確認してください。")
-            st.session_state.api_key = api_key
-            print("API_KEY loaded from .env file.")  # デバッグログ
-    except Exception as e:
-        print(f"Error loading environment variables: {e}")  # デバッグログ
-        raise
-
+# 「.env」ファイルで定義した環境変数の読み込み
+load_dotenv()
 
 ############################################################
 # 関数定義
@@ -56,16 +35,23 @@ def initialize():
     """
     画面読み込み時に実行する初期化処理
     """
-    # 環境変数の読み込み
-    load_environment_variables()
-    # 初期化データの用意
-    initialize_session_state()
-    # ログ出力用にセッションIDを生成
-    initialize_session_id()
-    # ログ出力の設定
-    initialize_logger()
-    # RAGのRetrieverを作成
-    initialize_retriever()
+    # # 初期化データの用意
+    # initialize_session_state()
+    # # ログ出力用にセッションIDを生成
+    # initialize_session_id()
+    # # ログ出力の設定
+    # initialize_logger()
+    # # RAGのRetrieverを作成
+    # initialize_retriever()
+    try:
+        initialize_session_state()
+        initialize_session_id()
+        initialize_logger()
+        initialize_retriever()
+
+    except Exception as e:
+        print("Initialization Error:", e)
+        raise
 
 
 def initialize_logger():
@@ -141,12 +127,12 @@ def initialize_retriever():
             doc.metadata[key] = adjust_string(doc.metadata[key])
     
     # 埋め込みモデルの用意
-    embeddings = OpenAIEmbeddings()
+    embeddings = OpenAIEmbeddings(api_key=os.getenv("OPENAI_API_KEY"))
     
     # チャンク分割用のオブジェクトを作成
     text_splitter = CharacterTextSplitter(
-        chunk_size=500,
-        chunk_overlap=50,
+        chunk_size=ct.CHUNK_SIZE,
+        chunk_overlap=ct.CHUNK_OVERLAP,
         separator="\n"
     )
 
@@ -157,7 +143,7 @@ def initialize_retriever():
     db = Chroma.from_documents(splitted_docs, embedding=embeddings)
 
     # ベクターストアを検索するRetrieverの作成
-    st.session_state.retriever = db.as_retriever(search_kwargs={"k": 3})
+    st.session_state.retriever = db.as_retriever(search_kwargs={"k": ct.NUM_RELATED_DOCS})
 
 
 def initialize_session_state():
@@ -237,9 +223,22 @@ def file_load(path, docs_all):
     # 想定していたファイル形式の場合のみ読み込む
     if file_extension in ct.SUPPORTED_EXTENSIONS:
         # ファイルの拡張子に合ったdata loaderを使ってデータ読み込み
-        loader = ct.SUPPORTED_EXTENSIONS[file_extension](path)
-        docs = loader.load()
-        docs_all.extend(docs)
+        # loader = ct.SUPPORTED_EXTENSIONS[file_extension](path)
+        # docs = loader.load()
+        # docs_all.extend(docs)
+        if file_extension == ".csv":
+            import pandas as pd
+            # CSV ファイルを読み込む
+            df = pd.read_csv(path, encoding="utf-8")
+            # 各行を1つの文字列に統合（例: 各行を箇条書きにする）
+            combined_text = "\n".join([f"- {', '.join(map(str, row))}" for row in df.values])
+            # 統合したテキストを1つのドキュメントとして追加
+            docs_all.append(Document(page_content=combined_text, metadata={"source": file_name}))
+        else:
+            # 他のファイル形式の場合は通常通り読み込む
+            loader = ct.SUPPORTED_EXTENSIONS[file_extension](path)
+            docs = loader.load()
+            docs_all.extend(docs)
 
 
 def adjust_string(s):

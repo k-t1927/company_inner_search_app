@@ -50,12 +50,23 @@ RAG_TOP_FOLDER_PATH = "./data"
 SUPPORTED_EXTENSIONS = {
     ".pdf": PyMuPDFLoader,
     ".docx": Docx2txtLoader,
-    ".csv": lambda path: CSVLoader(path, encoding="utf-8")
+    ".csv": lambda path: CSVLoader(path, encoding="utf-8"),
+    ".txt":  lambda path: TextLoader(        # ★ 追加
+        path,
+        encoding="utf-8",                   # 文字化け対策
+        autodetect_encoding=True            # BOM / Shift‑JIS も自動判定
+    ),
 }
 WEB_URL_LOAD_TARGETS = [
     "https://generative-ai.web-camp.io/"
 ]
 
+# ==========================================
+# ベクターストア設定
+# ==========================================
+NUM_RELATED_DOCS = 5  # history_aware_retrieverで取得する関連ドキュメント数
+CHUNK_SIZE = 500  # チャンクサイズ
+CHUNK_OVERLAP = 50  # チャンクの重なり
 
 # ==========================================
 # プロンプトテンプレート
